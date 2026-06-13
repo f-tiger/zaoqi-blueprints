@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 提效自查 · 老板让用 AI,先搞清哪些活该交、哪些不该交</title>
+<meta name="description" content="把你每周的工作拆开看:哪些能安全交给 AI、哪些不能、能省多少时间。保守数字在前,经得起追问。免费,纯前端,数据不离开你的浏览器。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAFAF7;--grid:#E7EAE3;--ink:#1C2420;--ink-soft:#586259;
+  --verdigris:#1F7A63;--verdigris-deep:#145C4A;--brass:#C99A2C;
+  --card:#FFFFFF;--l0:#9A6A4A;--l1:#5B8FA8;--l2:#C99A2C;--l3:#1F7A63;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Sans SC',sans-serif;background:var(--paper);color:var(--ink);
+  line-height:1.7;-webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:30px 30px;
+}
+.serif{font-family:'Noto Serif SC',serif}
+.mono{font-family:'IBM Plex Mono',monospace}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px}
+
+header{padding:46px 0 30px;text-align:center}
+.badge{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.12em;color:var(--verdigris);border:1px solid var(--verdigris);padding:5px 13px;border-radius:999px;margin-bottom:20px;background:rgba(31,122,99,.05)}
+.badge::before{content:"⚒"}
+h1{font-family:'Noto Serif SC',serif;font-weight:900;font-size:clamp(1.7rem,4.6vw,2.5rem);line-height:1.3}
+.sub{margin:16px auto 0;max-width:32em;color:var(--ink-soft);font-size:1rem}
+.privacy{margin-top:16px;font-size:.8rem;color:var(--verdigris);font-family:'IBM Plex Mono',monospace}
+
+.panel{background:var(--card);border:1.5px solid var(--ink);border-radius:14px;box-shadow:6px 6px 0 rgba(28,36,32,.08);margin:28px 0;overflow:hidden}
+.panel-head{background:var(--ink);color:var(--paper);padding:14px 22px;display:flex;justify-content:space-between;align-items:center}
+.panel-head .t{font-family:'IBM Plex Mono',monospace;font-size:.78rem;letter-spacing:.1em}
+.panel-head .n{font-family:'Noto Serif SC',serif;font-weight:900;font-size:1.1rem;color:var(--brass)}
+.panel-body{padding:24px 22px}
+
+.intro-step{display:flex;gap:14px;margin-bottom:14px;font-size:.92rem;color:var(--ink-soft)}
+.intro-step b{color:var(--ink)}
+.step-dot{flex:none;width:24px;height:24px;border-radius:50%;background:var(--verdigris);color:#fff;display:grid;place-items:center;font-size:.8rem;font-weight:700}
+
+label.fld{display:block;font-size:.85rem;font-weight:500;margin-bottom:6px;color:var(--ink)}
+input[type=text],input[type=number],select{
+  width:100%;padding:11px 13px;border:1.5px solid var(--grid);border-radius:9px;
+  font-family:inherit;font-size:.95rem;background:var(--paper);color:var(--ink);
+}
+input:focus,select:focus{outline:none;border-color:var(--verdigris)}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:600px){.row{grid-template-columns:1fr 1fr;gap:10px}.row .full{grid-column:1/-1}}
+
+.dim{margin-bottom:15px}
+.dim-q{font-size:.9rem;font-weight:500;margin-bottom:8px}
+.dim-q small{color:var(--ink-soft);font-weight:400}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opt{flex:1;min-width:120px;padding:9px 12px;border:1.5px solid var(--grid);border-radius:8px;background:var(--paper);font-size:.82rem;cursor:pointer;transition:all .15s;text-align:center}
+.opt:hover{border-color:var(--verdigris)}
+.opt.on{background:var(--verdigris);border-color:var(--verdigris);color:#fff}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 26px;border-radius:999px;font-size:.98rem;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:transform .15s,background .2s}
+.btn-primary{background:var(--brass);color:var(--ink);font-weight:700;width:100%;padding:15px}
+.btn-primary:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.btn-ghost{background:transparent;border:1.5px solid var(--ink);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--verdigris);color:var(--verdigris)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+
+#taskList .task-card{border:1.5px solid var(--grid);border-radius:11px;padding:18px;margin-bottom:14px;position:relative;background:var(--paper)}
+.task-card .del{position:absolute;top:12px;right:14px;border:none;background:none;color:var(--ink-soft);cursor:pointer;font-size:1.1rem;line-height:1}
+.task-card .del:hover{color:var(--l0)}
+
+#result{display:none}
+#result.show{display:block;animation:rise .4s ease}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+.verdict{text-align:center;padding:8px 0 20px}
+.verdict .big{font-family:'Noto Serif SC',serif;font-weight:900;font-size:2.6rem;color:var(--verdigris-deep);line-height:1.1}
+.verdict .lbl{font-size:.85rem;color:var(--ink-soft);margin-top:4px}
+.verdict .opt-note{font-size:.78rem;color:var(--ink-soft);margin-top:6px;font-family:'IBM Plex Mono',monospace}
+
+table{width:100%;border-collapse:collapse;font-size:.85rem;margin:10px 0}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--grid)}
+th{font-size:.72rem;color:var(--ink-soft);font-weight:500;letter-spacing:.04em}
+.lvl{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:700;color:#fff;font-family:'IBM Plex Mono',monospace}
+.lvl.L0{background:var(--l0)}.lvl.L1{background:var(--l1)}.lvl.L2{background:var(--l2)}.lvl.L3{background:var(--l3)}
+
+.section-h{font-family:'Noto Serif SC',serif;font-weight:700;font-size:1.05rem;margin:24px 0 10px;padding-top:18px;border-top:1px dashed var(--grid)}
+.section-h:first-child{border-top:none;padding-top:0}
+.win{border-left:3px solid var(--brass);padding:10px 14px;margin-bottom:12px;background:rgba(201,154,44,.06);border-radius:0 8px 8px 0}
+.win .wt{font-weight:700;font-size:.92rem}
+.win .wd{font-size:.83rem;color:var(--ink-soft);margin-top:3px}
+.win .wtool{font-size:.82rem;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(201,154,44,.4);color:var(--ink)}
+.win .wtool .eg{color:var(--ink-soft);font-size:.76rem}
+.toolmap{margin:6px 0}
+.tmrow{padding:12px 14px;border:1px solid var(--grid);border-radius:9px;margin-bottom:8px;background:var(--paper)}
+.tmname{font-weight:700;font-size:.9rem;color:var(--verdigris-deep)}
+.tmdesc{font-size:.83rem;color:var(--ink-soft);margin:3px 0 4px}
+.tmeg{font-size:.76rem;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace}
+.tmnote{font-size:.82rem;margin-top:10px;text-align:center;color:var(--ink-soft)}
+.tmnote a{color:var(--verdigris);text-decoration:none;font-weight:500}
+.tmnote a:hover{text-decoration:underline}
+.keep{border-left:3px solid var(--l0);padding:10px 14px;background:rgba(154,106,74,.06);border-radius:0 8px 8px 0;font-size:.85rem}
+.keep b{color:var(--l0)}
+
+.honesty{background:rgba(31,122,99,.06);border:1px solid var(--verdigris);border-radius:10px;padding:14px 16px;font-size:.83rem;color:var(--verdigris-deep);margin-top:20px}
+.honesty b{display:block;margin-bottom:4px}
+
+.forge-cta{text-align:center;padding:30px 22px;background:var(--ink);color:var(--paper);border-radius:14px;margin:28px 0}
+.forge-cta h3{font-family:'Noto Serif SC',serif;font-weight:700;font-size:1.2rem;margin-bottom:8px}
+.forge-cta p{font-size:.88rem;color:rgba(250,250,247,.7);max-width:30em;margin:0 auto 16px}
+.forge-cta a{display:inline-block;background:var(--brass);color:var(--ink);font-weight:700;padding:12px 26px;border-radius:999px;text-decoration:none;font-size:.92rem;transition:filter .2s}
+.forge-cta a:hover{filter:brightness(1.08)}
+
+footer{text-align:center;padding:30px 0 50px;font-size:.8rem;color:var(--ink-soft)}
+footer a{color:var(--verdigris);text-decoration:none}
+.hidden{display:none}
+.dims-fold{margin-top:6px;border-top:1px dashed var(--grid);padding-top:12px}
+.dims-fold summary{cursor:pointer;font-size:.82rem;color:var(--verdigris);list-style:none;user-select:none;padding:4px 0}
+.dims-fold summary::-webkit-details-marker{display:none}
+.dims-fold summary:hover{color:var(--verdigris-deep)}
+.dims-fold[open] summary{margin-bottom:12px;font-weight:500}
+select.tsel{font-weight:500}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:13px 22px;border-radius:999px;font-size:.88rem;box-shadow:0 8px 28px rgba(0,0,0,.22);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:100;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.task-card .live{position:absolute;top:14px;right:46px;font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--ink-soft);display:flex;align-items:center;gap:5px}
+.task-card .live .lvl{font-size:.65rem}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+.btn:focus-visible,.opt:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="badge mono">免费 · 数据只留在你的浏览器</span>
+    <h1 class="serif">老板让用 AI 提效,<br>先搞清哪些活该交、哪些不该交</h1>
+    <p class="sub">把你每周的工作逐项拆开:哪些能安全交给 AI、哪些绝对不能、大概能省多少时间。不画大饼,保守数字在前。</p>
+    <p class="privacy">🔒 纯网页计算,数据全程留在你的浏览器,不上传任何服务器</p>
+  </header>
+
+  <!-- 录入 -->
+  <div class="panel" id="inputPanel">
+    <div class="panel-head"><span class="t mono">STEP 1 · 盘点你的周任务</span><span class="n serif">⚒</span></div>
+    <div class="panel-body">
+      <div class="intro-step"><span class="step-dot">1</span><div>从下拉里<b>选出你每周固定要做的事</b>(列表没有就选"其他"自己填),<b>至少 3 项</b>。</div></div>
+      <div class="intro-step"><span class="step-dot">2</span><div>工具已按常见情况<b>预填好评分</b>,你只要核对下"每周几次/单次多久",觉得不准可点开微调。</div></div>
+
+      <div id="taskList"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="addTask">+ 添加一项任务</button>
+        <button class="btn btn-primary" id="runBtn" style="flex:2">生成我的提效自查报告 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果 -->
+  <div id="result">
+    <div class="panel">
+      <div class="panel-head"><span class="t mono">STEP 2 · 你的提效自查报告</span><span class="n serif">⚒</span></div>
+      <div class="panel-body">
+        <div class="verdict">
+          <div class="big serif" id="vTotal">—</div>
+          <div class="lbl">每周保守可节省工时(已扣除学习成本与 AI 返工)</div>
+          <div class="opt-note" id="vOpt"></div>
+        </div>
+
+        <div class="section-h serif">每项任务该怎么办(按能省的时间排序)</div>
+        <div style="overflow-x:auto"><table id="auditTable"></table></div>
+
+        <div id="winsWrap" class="hidden">
+          <div class="section-h serif">🎯 先从这几个下手 — 最容易见效</div>
+          <div id="wins"></div>
+        </div>
+
+        <div id="keepWrap" class="hidden">
+          <div class="section-h serif">⛔ 这些别交给 AI — 交了反而容易出事</div>
+          <div id="keeps"></div>
+        </div>
+
+        <div class="section-h serif" id="toolmapTitle">🔧 这些活,分别该用哪类工具</div>
+        <div id="toolmap" class="toolmap"></div>
+
+        <div class="honesty">
+          <b>说句实在话</b>
+          上面的小时数是<b>估算</b>,不是承诺——而且已经往保守了算(扣掉了学习、调试、AI 出错返工的时间)。
+          要变成真能信的数字,得挑一项实际用两周、对比前后耗时才算数。所以别拿这份估算直接当 KPI 报上去。
+        </div>
+
+        <div class="btn-row" style="margin-top:18px">
+          <button class="btn btn-ghost" id="copyBtn">📋 复制成文字(可粘进周报/汇报)</button>
+          <button class="btn btn-ghost" id="resetBtn">↺ 重新填</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="forge-cta">
+      <h3 class="serif">这只是快速自查。想要一份能拍在老板桌上的完整方案?</h3>
+      <p>完整版会带你一步步盘点工时、逐项打分、做出两周可回滚的试点计划,最后产出一页给老板看的方案。开源免费,适合会用 Claude Code 的朋友一条命令装。</p>
+      <a href="https://github.com/f-tiger/zaoqi-blueprints?utm_source=forged-tool&utm_medium=ai-efficiency-audit" target="_blank" rel="noopener">⚒ 去拿完整工具(开源免费)</a>
+    </div>
+  </div>
+
+  <footer>
+    免费工具 · 把"用 AI 提效"的压力,变成你能用的东西 · <a href="https://github.com/f-tiger/zaoqi-blueprints?utm_source=forged-tool&utm_medium=footer" target="_blank" rel="noopener">查看开源代码</a><br>
+    <span class="mono" style="font-size:.72rem">⚒ 造器 ZAOQI</span>
+  </footer>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+  // ---- 评分维度定义(严格对应 audit-framework.md)----
+  var DIMS=[
+    {k:'repeat',q:'这件事重复吗?',o:[['每次都不同',0],['每月重复',2],['每天/每周固定',4]]},
+    {k:'rule',q:'有固定套路吗?',o:[['全凭临场判断',0],['有大致套路',2],['有明确步骤/模板',4]]},
+    {k:'io',q:'输入输出规整吗?',o:[['杂乱/口头为主',0],['半结构(邮件聊天)',2],['结构化(表格文档)',4]]},
+    {k:'judge',q:'需要多少专业判断?',o:[['几乎每步都要',0],['关键节点要',2],['基本不需要',4]]},
+    {k:'cost',q:'做错了代价大吗?',o:[['影响客户/合规/营收',0],['内部返工',2],['改一下就行',4]]}
+  ];
+  // 一票否决
+  var VETO=[
+    {k:'compliance',label:'涉及合规/资金/法律'},
+    {k:'sensitive',label:'涉及敏感/客户数据'},
+    {k:'human',label:'靠人际信任(谈判/面谈)'}
+  ];
+  var TAKE={L0:0,L1:0.30,L2:0.60,L3:0.85};
+
+  // 工具类型方向库:说品类不点死产品,不会过期、不像带货
+  // 每类给:适合场景、举例(措辞"例如"非"推荐榜")
+  var TOOLTYPES={
+    chat:{name:'通用对话 AI',desc:'把要求和素材丢给它,让它帮你出初稿、改写、总结',eg:'例如 ChatGPT、Claude、Kimi、豆包、文心一言'},
+    auto:{name:'自动化 / 工作流工具',desc:'搭一次固定流程,之后定时自动跑,适合每天/每周重复的活',eg:'例如 扣子(Coze)、Dify,或带定时任务的自动化平台'},
+    write:{name:'写作 / 内容 AI',desc:'专门优化文字表达、标题、风格的工具,或直接用对话 AI 配好提示词',eg:'例如 通用对话 AI + 一套好的提示词模板'},
+    data:{name:'表格 / 数据 AI',desc:'能读懂表格、自动整理计算、生成图表的工具',eg:'例如 AI 表格助手,或对话 AI 配合数据文件上传'},
+    search:{name:'联网搜索 AI',desc:'能实时联网查资料、汇总多个来源的工具',eg:'例如带联网/搜索功能的对话 AI'}
+  };
+
+  // 常见任务预设:scores 顺序对应 DIMS = [重复度,规则化,输入输出,判断密度(反向),出错代价(反向)]
+  // freq/min 为典型值,用户可改。这些是"起点",不是定论。tt = 工具类型
+  var PRESETS=[
+    {name:'整理会议纪要并分发',     freq:3, min:40, scores:[4,4,2,4,4], tt:'chat'},
+    {name:'写周报 / 工作汇报',      freq:1, min:90, scores:[4,2,2,2,2], tt:'chat'},
+    {name:'写月报 / 阶段总结',      freq:0.25,min:120,scores:[2,2,2,2,2], tt:'chat'},
+    {name:'回复内部协作邮件',       freq:10,min:8,  scores:[4,2,2,2,4], tt:'chat'},
+    {name:'整理数据做复盘 / 报表',  freq:1, min:90, scores:[4,4,4,2,2], tt:'data'},
+    {name:'竞品 / 行业动态摘要',    freq:5, min:25, scores:[4,2,2,4,4], tt:'auto'},
+    {name:'写文案 / 推广内容',      freq:3, min:45, scores:[2,2,2,0,2], tt:'write'},
+    {name:'做 PPT / 汇报材料',      freq:1, min:120,scores:[2,2,2,2,2], tt:'chat'},
+    {name:'客户 / 用户答疑',        freq:20,min:10, scores:[4,2,0,0,0], tt:'chat'},
+    {name:'查资料 / 信息搜集',      freq:5, min:30, scores:[2,2,2,2,4], tt:'search'},
+    {name:'翻译 / 校对文档',        freq:2, min:40, scores:[4,4,4,2,2], tt:'chat'},
+    {name:'排期 / 协调会议时间',    freq:5, min:15, scores:[4,4,2,2,4], tt:'auto'},
+    {name:'录入 / 整理表格数据',    freq:3, min:30, scores:[4,4,4,4,4], tt:'data'},
+    {name:'其他(自己填)',         freq:1, min:30, scores:null, custom:true, tt:'chat'}
+  ];
+
+  var tasks=[];
+  function uid(){return 't'+Math.random().toString(36).slice(2,8);}
+
+  var toastTimer;
+  function toast(msg){
+    var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},2800);
+  }
+
+  var LVLREC={L0:'保留人工',L1:'AI 辅助',L2:'AI 做+人审',L3:'可全自动'};
+
+  function updateLive(el){
+    var sel=el.querySelector('.tsel');
+    var live=el.querySelector('.live');
+    if(sel.value===''){live.innerHTML='<span style="opacity:.5">选个任务开始</span>';return;}
+    var t=readTask(el);
+    if(t.answered<5){live.innerHTML='<span style="opacity:.5">微调 '+t.answered+'/5</span>';return;}
+    var lvl=classify(t);
+    live.innerHTML='<span class="lvl '+lvl+'">'+LVLREC[lvl]+'</span>';
+  }
+
+  function addTask(){
+    var id=uid();
+    tasks.push({id:id});
+    var el=document.createElement('div');
+    el.className='task-card';el.dataset.id=id;
+    var dimHtml=DIMS.map(function(d){
+      return '<div class="dim"><div class="dim-q">'+d.q+'</div><div class="opts" data-dim="'+d.k+'">'+
+        d.o.map(function(o){return '<button type="button" class="opt" data-v="'+o[1]+'">'+o[0]+'</button>';}).join('')+
+        '</div></div>';
+    }).join('');
+    var vetoHtml='<div class="dim"><div class="dim-q">有以下任一情况?<small>(勾了就直接判"保留人工",这是为了让方案站得住)</small></div><div class="opts" data-veto="1">'+
+      VETO.map(function(v){return '<button type="button" class="opt" data-veto-k="'+v.k+'">'+v.label+'</button>';}).join('')+
+      '</div></div>';
+    var presetOpts=PRESETS.map(function(p,i){return '<option value="'+i+'">'+p.name+'</option>';}).join('');
+    el.innerHTML=
+      '<button class="del" title="删除">✕</button>'+
+      '<div class="live"><span style="opacity:.5">选个任务开始</span></div>'+
+      '<div class="row"><div class="full"><label class="fld">这是什么任务?</label>'+
+        '<select class="tsel"><option value="" selected disabled>— 选一个,或选最后一项自己填 —</option>'+presetOpts+'</select>'+
+        '<input type="text" class="tname-custom" placeholder="输入任务名称" style="display:none;margin-top:8px"></div>'+
+      '<div><label class="fld">每周几次</label><input type="number" class="tfreq" min="0" step="0.5" value="1"></div>'+
+      '<div><label class="fld">单次分钟</label><input type="number" class="tmin" min="0" step="5" value="30"></div></div>'+
+      '<details class="dims-fold"><summary>已按常见情况预填评分,点开可微调 ▾</summary>'+dimHtml+vetoHtml+'</details>';
+    document.getElementById('taskList').appendChild(el);
+
+    var sel=el.querySelector('.tsel');
+    var custom=el.querySelector('.tname-custom');
+    var fold=el.querySelector('.dims-fold');
+
+    sel.addEventListener('change',function(){
+      var p=PRESETS[parseInt(sel.value,10)];
+      if(!p)return;
+      if(p.custom){
+        custom.style.display='block';custom.focus();
+        // 自定义:清空五维,展开让用户自己选
+        el.querySelectorAll('.opts[data-dim] .opt.on').forEach(function(b){b.classList.remove('on');});
+        fold.open=true;
+      }else{
+        custom.style.display='none';custom.value='';
+        // 预填频率/耗时
+        el.querySelector('.tfreq').value=p.freq;
+        el.querySelector('.tmin').value=p.min;
+        // 预填五维:scores 顺序对应 DIMS
+        DIMS.forEach(function(d,di){
+          var wrap=el.querySelector('.opts[data-dim="'+d.k+'"]');
+          wrap.querySelectorAll('.opt').forEach(function(b){
+            b.classList.toggle('on',parseInt(b.dataset.v,10)===p.scores[di]);
+          });
+        });
+        fold.open=false;
+      }
+      updateLive(el);
+    });
+    custom.addEventListener('input',function(){updateLive(el);});
+
+    el.querySelector('.del').addEventListener('click',function(){
+      tasks=tasks.filter(function(t){return t.id!==id;});el.remove();
+    });
+    el.querySelectorAll('.opts[data-dim] .opt').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var sib=btn.parentElement.querySelectorAll('.opt');
+        sib.forEach(function(s){s.classList.remove('on');});btn.classList.add('on');
+        updateLive(el);
+      });
+    });
+    el.querySelectorAll('.opts[data-veto] .opt').forEach(function(btn){
+      btn.addEventListener('click',function(){btn.classList.toggle('on');updateLive(el);});
+    });
+  }
+
+  function readTask(el){
+    var sel=el.querySelector('.tsel');
+    var p=sel.value!==''?PRESETS[parseInt(sel.value,10)]:null;
+    var name;
+    if(p&&p.custom) name=el.querySelector('.tname-custom').value.trim()||'(未命名任务)';
+    else if(p) name=p.name;
+    else name='';
+    var freq=parseFloat(el.querySelector('.tfreq').value)||0;
+    var min=parseFloat(el.querySelector('.tmin').value)||0;
+    var score=0,answered=0;
+    DIMS.forEach(function(d){
+      var on=el.querySelector('.opts[data-dim="'+d.k+'"] .opt.on');
+      if(on){score+=parseInt(on.dataset.v,10);answered++;}
+    });
+    var vetoes=[];
+    el.querySelectorAll('.opts[data-veto] .opt.on').forEach(function(b){vetoes.push(b.dataset.vetoK);});
+    return {name:name,freq:freq,min:min,score:score,answered:answered,vetoes:vetoes,
+            tt:p?p.tt:'chat',
+            costOn:el.querySelector('.opts[data-dim="cost"] .opt.on')};
+  }
+
+  function classify(t){
+    var costVal=t.costOn?parseInt(t.costOn.dataset.v,10):0;
+    // 一票否决(覆盖总分)
+    if(t.vetoes.indexOf('sensitive')>=0||t.vetoes.indexOf('human')>=0) return 'L0';
+    if(t.vetoes.indexOf('compliance')>=0) return t.score>=7?'L1':'L0';
+    // 总分映射(对应 audit-framework.md)
+    if(t.score>=16) return costVal===4?'L3':'L2';  // 高分:出错代价低才全自动,否则需人审
+    if(t.score>=12) return 'L2';
+    if(t.score>=7)  return 'L1';
+    return 'L0';
+  }
+
+  function calc(t,lvl){
+    var theory=t.min*t.freq*TAKE[lvl]; // 分钟/周
+    var cons=theory*0.6, opt=theory*0.9;
+    if(lvl==='L2'){var review=t.min*t.freq*0.15;cons=Math.max(0,cons-review);opt=Math.max(0,opt-review);}
+    return {consMin:cons,optMin:opt};
+  }
+
+  function fmtH(min){return (min/60).toFixed(1);}
+
+  function run(){
+    var els=document.querySelectorAll('#taskList .task-card');
+    if(els.length<3){toast('至少填 3 项任务,结果才有参考价值');return;}
+    // 校验:每项都得答全五维、填好名称
+    var incomplete=[];
+    els.forEach(function(el,i){
+      var sel=el.querySelector('.tsel');
+      var t=readTask(el);
+      if(sel.value===''||t.answered<5||!t.name) incomplete.push(i+1);
+    });
+    if(incomplete.length){
+      toast('第 '+incomplete.join('、')+' 项还没填完(选任务 + 5 项评分齐)');
+      els[incomplete[0]-1].scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+    var rows=[],totalCons=0,totalOpt=0,wins=[],keeps=[];
+    els.forEach(function(el){
+      var t=readTask(el);
+      if(t.freq<=0||t.min<=0){t.freq=t.freq||1;t.min=t.min||30;} // 兜底
+      var lvl=classify(t);
+      var c=lvl==='L0'?{consMin:0,optMin:0}:calc(t,lvl);
+      totalCons+=c.consMin;totalOpt+=c.optMin;
+      rows.push({t:t,lvl:lvl,c:c});
+      if(lvl==='L0'){
+        var reason=t.vetoes.indexOf('sensitive')>=0?'涉及敏感数据':
+                   t.vetoes.indexOf('human')>=0?'本质是人际信任':
+                   t.vetoes.indexOf('compliance')>=0?'涉及合规/资金':'判断密度高或出错代价大';
+        keeps.push({name:t.name,reason:reason});
+      }
+    });
+    rows.sort(function(a,b){return b.c.consMin-a.c.consMin;});
+
+    // 表格
+    var th='<tr><th>任务</th><th>建议</th><th>周省(保守–乐观)</th></tr>';
+    var trs=rows.map(function(r){
+      var save=r.lvl==='L0'?'—':fmtH(r.c.consMin)+'–'+fmtH(r.c.optMin)+' h';
+      return '<tr><td>'+r.t.name+'</td><td><span class="lvl '+r.lvl+'">'+LVLREC[r.lvl]+'</span></td><td>'+save+'</td></tr>';
+    }).join('');
+    document.getElementById('auditTable').innerHTML=th+trs;
+
+    if(totalCons<1){ // 不足1分钟,基本全是L0
+      document.getElementById('vTotal').textContent='你的活,AI 暂时插不上手';
+      document.getElementById('vTotal').style.fontSize='1.5rem';
+      document.getElementById('vOpt').textContent='这其实是好事:说明你的工作判断密度高、可替代性低';
+    }else{
+      document.getElementById('vTotal').style.fontSize='';
+      document.getElementById('vTotal').textContent=fmtH(totalCons)+' 小时';
+      document.getElementById('vOpt').textContent='顺利的话最多能省到约 '+fmtH(totalOpt)+' 小时/周';
+    }
+
+    // Top3 速赢:L1/L2 且 保守节省≥15分钟/周
+    var winList=rows.filter(function(r){return (r.lvl==='L1'||r.lvl==='L2')&&r.c.consMin>=15;}).slice(0,3);
+    if(winList.length){
+      document.getElementById('wins').innerHTML=winList.map(function(r){
+        var how=r.lvl==='L2'?'让 AI 出初稿,你只做审核校对':'让 AI 起草/加速,你保留判断部分';
+        var tt=TOOLTYPES[r.t.tt]||TOOLTYPES.chat;
+        return '<div class="win"><div class="wt">'+r.t.name+' <span class="lvl '+r.lvl+'" style="font-size:.62rem">'+LVLREC[r.lvl]+'</span></div>'+
+          '<div class="wd">'+how+' · 周省约 '+fmtH(r.c.consMin)+' 小时。先拿它实际用两周,对比前后单次耗时,降 30% 以上算成功。</div>'+
+          '<div class="wtool">🔧 用什么:<b>'+tt.name+'</b> — '+tt.desc+'<br><span class="eg">'+tt.eg+'</span></div></div>';
+      }).join('');
+      document.getElementById('winsWrap').classList.remove('hidden');
+    }else{document.getElementById('winsWrap').classList.add('hidden');}
+
+    // 保留人工
+    if(keeps.length){
+      document.getElementById('keeps').innerHTML=keeps.map(function(k){
+        return '<div class="keep"><b>'+k.name+'</b> — '+k.reason+',明确不交给 AI。</div>';
+      }).join('');
+      document.getElementById('keepWrap').classList.remove('hidden');
+    }else{document.getElementById('keepWrap').classList.add('hidden');}
+
+    // 工具方向地图:只显示本次自查中出现、且建议用 AI(非 L0)的任务对应的工具类型
+    var usedTT={};
+    rows.forEach(function(r){if(r.lvl!=='L0')usedTT[r.t.tt]=true;});
+    var ttKeys=Object.keys(usedTT);
+    var tmTitle=document.getElementById('toolmapTitle');
+    var tmBox=document.getElementById('toolmap');
+    if(ttKeys.length){
+      tmBox.innerHTML=ttKeys.map(function(k){
+        var tt=TOOLTYPES[k];
+        return '<div class="tmrow"><div class="tmname">'+tt.name+'</div><div class="tmdesc">'+tt.desc+'</div><div class="tmeg">'+tt.eg+'</div></div>';
+      }).join('')+'<div class="tmnote">具体怎么搭、用什么提示词,<a href="https://github.com/f-tiger/zaoqi-blueprints?utm_source=forged-tool&utm_medium=toolmap" target="_blank" rel="noopener">完整版里有现成模板和步骤 →</a></div>';
+      tmTitle.style.display='';tmBox.style.display='';
+    }else{tmTitle.style.display='none';tmBox.style.display='none';}
+
+    window._report={rows:rows,totalCons:totalCons,totalOpt:totalOpt,wins:winList,keeps:keeps};
+    document.getElementById('result').classList.add('show');
+    document.getElementById('result').scrollIntoView({behavior:'smooth'});
+  }
+
+  function copyText(){
+    var r=window._report;if(!r)return;
+    var lines=['【AI 提效自查报告】',''];
+    lines.push('每周保守可节省:'+fmtH(r.totalCons)+' 小时(乐观上限 '+fmtH(r.totalOpt)+' 小时)','');
+    lines.push('每项任务怎么办:');
+    r.rows.forEach(function(x){
+      var rec=LVLREC[x.lvl];
+      var save=x.lvl==='L0'?'—':fmtH(x.c.consMin)+'–'+fmtH(x.c.optMin)+'h/周';
+      lines.push('· '+x.t.name+' ['+rec+'] '+save);
+    });
+    if(r.wins.length){lines.push('','先从这几个下手:');r.wins.forEach(function(x){var tt=TOOLTYPES[x.t.tt]||TOOLTYPES.chat;lines.push('· '+x.t.name+' — 用'+tt.name+',实际用两周,单次耗时降30%算成功');});}
+    if(r.keeps.length){lines.push('','不交给AI:');r.keeps.forEach(function(k){lines.push('· '+k.name+'('+k.reason+')');});}
+    lines.push('','* 以上为估算,挑一项实际用两周对比后才算数,别直接当 KPI。','由「AI 提效自查」生成 · github.com/f-tiger/zaoqi-blueprints');
+    var txt=lines.join('\n');
+    navigator.clipboard.writeText(txt).then(function(){
+      var b=document.getElementById('copyBtn');var o=b.textContent;b.textContent='✓ 已复制';setTimeout(function(){b.textContent=o;},1800);
+    },function(){alert('复制失败,请手动选择');});
+  }
+
+  document.getElementById('addTask').addEventListener('click',addTask);
+  document.getElementById('runBtn').addEventListener('click',run);
+  document.getElementById('copyBtn').addEventListener('click',copyText);
+  document.getElementById('resetBtn').addEventListener('click',function(){
+    document.getElementById('result').classList.remove('show');
+    document.getElementById('taskList').innerHTML='';tasks=[];
+    for(var i=0;i<3;i++)addTask();
+    document.getElementById('inputPanel').scrollIntoView({behavior:'smooth'});
+  });
+
+  // 初始 3 张
+  for(var i=0;i<3;i++)addTask();
+})();
+</script>
+</body>
+</html>
