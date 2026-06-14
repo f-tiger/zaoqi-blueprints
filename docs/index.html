@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-R41XP6CMED"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-R41XP6CMED');
+</script>
 <title>AI 提效自查 · 老板让用 AI,先搞清哪些活该交、哪些不该交</title>
 <meta name="description" content="把你每周的工作拆开看:哪些能安全交给 AI、哪些不能、能省多少时间。保守数字在前,经得起追问。免费,纯前端,数据不离开你的浏览器。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -261,6 +269,11 @@ select.tsel{font-weight:500}
   var tasks=[];
   function uid(){return 't'+Math.random().toString(36).slice(2,8);}
 
+  // GA 事件上报(GA 未加载也不报错)
+  function track(name,params){
+    try{ if(typeof gtag==='function') gtag('event',name,params||{}); }catch(e){}
+  }
+
   var toastTimer;
   function toast(msg){
     var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
@@ -477,6 +490,7 @@ select.tsel{font-weight:500}
     }else{tmTitle.style.display='none';tmBox.style.display='none';}
 
     window._report={rows:rows,totalCons:totalCons,totalOpt:totalOpt,wins:winList,keeps:keeps};
+    track('generate_report',{task_count:rows.length,saved_hours:Math.round(totalCons/60*10)/10,win_count:winList.length});
     document.getElementById('result').classList.add('show');
     document.getElementById('result').scrollIntoView({behavior:'smooth'});
   }
@@ -496,6 +510,7 @@ select.tsel{font-weight:500}
     lines.push('','* 以上为估算,挑一项实际用两周对比后才算数,别直接当 KPI。','由「AI 提效自查」生成 · github.com/f-tiger/zaoqi-blueprints');
     var txt=lines.join('\n');
     navigator.clipboard.writeText(txt).then(function(){
+      track('copy_report');
       var b=document.getElementById('copyBtn');var o=b.textContent;b.textContent='✓ 已复制';setTimeout(function(){b.textContent=o;},1800);
     },function(){alert('复制失败,请手动选择');});
   }
@@ -508,6 +523,12 @@ select.tsel{font-weight:500}
     document.getElementById('taskList').innerHTML='';tasks=[];
     for(var i=0;i<3;i++)addTask();
     document.getElementById('inputPanel').scrollIntoView({behavior:'smooth'});
+  });
+
+  // 用事件委托捕获所有指向 GitHub 完整版的回链点击(含动态生成的工具地图链接)
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[href*="github.com/f-tiger"]');
+    if(a){track('click_fulltool',{from:a.href.indexOf('toolmap')>=0?'toolmap':a.href.indexOf('footer')>=0?'footer':'cta'});}
   });
 
   // 初始 3 张
